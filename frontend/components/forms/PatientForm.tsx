@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,12 +8,7 @@ import { Form } from "@/components/ui/form";
 import CustomFormField from "../CustomFormField";
 import SubmitButton from "../SubmitButton";
 import { useState } from "react";
-
-const formSchema = z.object({
-  username: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
-  }),
-});
+import { UserFormValidation } from "@/lib/validation";
 
 export enum FormFieldType {
   INPUT = "input",
@@ -25,20 +21,27 @@ export enum FormFieldType {
 }
 const PatientForm = () => {
   const [isLoading, setIsLoading] = useState(false);
-  // 1. Define your form.
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+
+  const form = useForm<z.infer<typeof UserFormValidation>>({
+    resolver: zodResolver(UserFormValidation),
     defaultValues: {
-      username: "",
+      name: "",
+      email: "",
+      phone: "",
     },
   });
 
-  // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
+  const onSubmit = (values: z.infer<typeof UserFormValidation>) => {
     console.log(values);
-  }
+    setIsLoading(true);
+
+    const { name, email, phone } = values;
+
+    try {
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <Form {...form}>

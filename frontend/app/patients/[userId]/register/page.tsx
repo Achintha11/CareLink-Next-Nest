@@ -1,15 +1,14 @@
-"use client";
-
 import Image from "next/image";
-import logo from "../public/assets/icons/logo-icon.svg";
-import onBoardImage from "../public/assets/images/onboarding-img.png";
-import PatientForm from "@/components/forms/PatientForm";
+import React from "react";
+import registerImage from "../../../../public/assets/images/register-img.png";
+import logo from "../../../../public/assets/icons/logo-icon.svg";
+import RegisterForm from "@/components/forms/RegisterForm";
 
-export default function Home() {
+const Register = () => {
   return (
     <div className="flex h-screen max-h-screen  ">
-      <section className="remove-scrollbar container my-auto ">
-        <div className="sub-container max-w-[496px]">
+      <section className="remove-scrollbar container">
+        <div className="sub-container max-w-[860px] flex-1 flex-col">
           <div className="flex items-center mb-12">
             <Image
               src={logo}
@@ -23,16 +22,18 @@ export default function Home() {
             </h1>
           </div>
 
-          <PatientForm />
+          <RegisterForm />
         </div>
       </section>
       <Image
-        src={onBoardImage}
+        src={registerImage}
         alt="o"
         height={1000}
         width={1000}
-        className="side-img max-w-[50%]"
+        className="side-img max-w-[390px]"
       />
     </div>
   );
-}
+};
+
+export default Register;
