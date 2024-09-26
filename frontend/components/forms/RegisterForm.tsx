@@ -21,12 +21,17 @@ import {
 import { SelectItem } from "@/components/ui/select";
 import Image from "next/image";
 import FileUploader from "../FileUploader";
+import { useAppDispatch } from "@/lib/redux/hooks";
+import { createPatient } from "@/features/patient/patientSlice";
+import { useRouter } from "next/navigation";
 
-const RegisterForm = () => {
+const RegisterForm = ({ userId }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useAppDispatch();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof PatientFormValidation>>({
-    resolver: zodResolver(UserFormValidation),
+    resolver: zodResolver(PatientFormValidation),
     defaultValues: {
       ...PatientFormDefaultValues,
       name: "",
@@ -36,60 +41,51 @@ const RegisterForm = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof PatientFormValidation>) => {
+    console.log("values", values);
     setIsLoading(true);
 
-    // Store file info in form data as
-    let formData;
-    if (
-      values.identificationDocument &&
-      values.identificationDocument?.length > 0
-    ) {
-      const blobFile = new Blob([values.identificationDocument[0]], {
-        type: values.identificationDocument[0].type,
-      });
+    // Check if a file is provided and set it directly in the patient object
+    const identificationDocument = values.identificationDocument?.[0]; // Get the first file if it exists
 
-      formData = new FormData();
-      formData.append("blobFile", blobFile);
-      formData.append("fileName", values.identificationDocument[0].name);
-    }
+    // Prepare the patient object
+    const patient = {
+      userId: userId,
+      name: values.name,
+      email: values.email,
+      phone: values.phone,
+      birthDate: new Date(values.birthDate),
+      gender: values.gender,
+      address: values.address,
+      occupation: values.occupation,
+      emergencyContactName: values.emergencyContactName,
+      emergencyContactNumber: values.emergencyContactNumber,
+      primaryPhysician: values.primaryPhysician,
+      insuranceProvider: values.insuranceProvider,
+      insurancePolicyNumber: values.insurancePolicyNumber,
+      allergies: values.allergies,
+      currentMedication: values.currentMedication,
+      familyMedicalHistory: values.familyMedicalHistory,
+      pastMedicalHistory: values.pastMedicalHistory,
+      identificationType: values.identificationType,
+      identificationNumber: values.identificationNumber,
+      privacyConsent: values.privacyConsent,
+    };
+
+    console.log("Patient data:", patient);
 
     try {
-      const patient = {
-        //userId: user.$id,
-        name: values.name,
-        email: values.email,
-        phone: values.phone,
-        birthDate: new Date(values.birthDate),
-        gender: values.gender,
-        address: values.address,
-        occupation: values.occupation,
-        emergencyContactName: values.emergencyContactName,
-        emergencyContactNumber: values.emergencyContactNumber,
-        primaryPhysician: values.primaryPhysician,
-        insuranceProvider: values.insuranceProvider,
-        insurancePolicyNumber: values.insurancePolicyNumber,
-        allergies: values.allergies,
-        currentMedication: values.currentMedication,
-        familyMedicalHistory: values.familyMedicalHistory,
-        pastMedicalHistory: values.pastMedicalHistory,
-        identificationType: values.identificationType,
-        identificationNumber: values.identificationNumber,
-        identificationDocument: values.identificationDocument
-          ? formData
-          : undefined,
-        privacyConsent: values.privacyConsent,
-      };
-
-      // const newPatient = await registerPatient(patient);
-
-      // if (newPatient) {
-      //   router.push(`/patients/${user.$id}/new-appointment`);
-      // }
+      // Dispatch the createPatient action with the patient object
+      await dispatch(createPatient({ patient, identificationDocument })).then(
+        (result) => {
+          console.log("Patient created successfully:", result);
+          router.push(`/patients/${userId}/new-appointment`);
+        }
+      );
     } catch (error) {
-      console.log(error);
+      console.log("Error creating patient:", error);
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return (

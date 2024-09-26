@@ -1,8 +1,12 @@
+"use client";
+
 import type { Metadata } from "next";
 import "./globals.css";
 import { Plus_Jakarta_Sans as FontSans } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Provider } from "react-redux";
+import { store } from "@/lib/redux/store";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -10,10 +14,10 @@ const fontSans = FontSans({
   variable: "--font-sans",
 });
 
-export const metadata: Metadata = {
-  title: "CareLink",
-  description: "A HealthCare Management System",
-};
+// export const metadata: Metadata = {
+//   title: "CareLink",
+//   description: "A HealthCare Management System",
+// };
 
 export default function RootLayout({
   children,
@@ -28,9 +32,11 @@ export default function RootLayout({
           fontSans.variable
         )}
       >
-        <ThemeProvider attribute="class" defaultTheme="dark">
-          {children}
-        </ThemeProvider>
+        <Provider store={store}>
+          <ThemeProvider attribute="class" defaultTheme="dark">
+            {children}
+          </ThemeProvider>
+        </Provider>
       </body>
     </html>
   );

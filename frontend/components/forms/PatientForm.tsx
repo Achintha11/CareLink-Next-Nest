@@ -9,6 +9,9 @@ import CustomFormField from "../CustomFormField";
 import SubmitButton from "../SubmitButton";
 import { useState } from "react";
 import { UserFormValidation } from "@/lib/validation";
+import { useAppDispatch } from "@/lib/redux/hooks";
+import { createUser } from "@/features/user/userSlice";
+import { useRouter } from "next/navigation";
 
 export enum FormFieldType {
   INPUT = "input",
@@ -21,6 +24,8 @@ export enum FormFieldType {
 }
 const PatientForm = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useAppDispatch();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof UserFormValidation>>({
     resolver: zodResolver(UserFormValidation),
@@ -32,15 +37,20 @@ const PatientForm = () => {
   });
 
   const onSubmit = (values: z.infer<typeof UserFormValidation>) => {
-    console.log(values);
     setIsLoading(true);
-
-    const { name, email, phone } = values;
-
-    try {
-    } catch (error) {
-      console.log(error);
-    }
+    dispatch(createUser(values))
+      .unwrap() // Allows catching errors if needed
+      .then((result) => {
+        router.push(`/patients/${result.id}/register`);
+        console.log("User created successfully:", result);
+        form.reset();
+      })
+      .catch((error) => {
+        console.error("Failed to create user:", error);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   return (

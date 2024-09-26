@@ -1,8 +1,17 @@
+"use client";
+
 import Image from "next/image";
 
 import { AppointmentForm } from "@/components/forms/AppointmentForm";
+import { useAppSelector } from "@/lib/redux/hooks";
 
-const Appointment = async ({ params: { userId } }: SearchParamProps) => {
+const Appointment = ({ params }) => {
+  const { userId } = params;
+
+  const { patient } = useAppSelector((state) => state.patient);
+  const patientId = patient?.id;
+
+  console.log(patientId);
   return (
     <div className="flex h-screen max-h-screen">
       <section className="remove-scrollbar container my-auto">
@@ -16,9 +25,9 @@ const Appointment = async ({ params: { userId } }: SearchParamProps) => {
           />
 
           <AppointmentForm
-          //patientId={patient?.$id}
-          // userId={userId}
-          // type="create"
+            patientId={patientId}
+            userId={userId}
+            type="create"
           />
 
           <p className="copyright mt-10 py-12">© 2024 CarePluse</p>
