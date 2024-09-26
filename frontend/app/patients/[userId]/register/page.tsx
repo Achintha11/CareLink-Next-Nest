@@ -1,10 +1,14 @@
+"use client";
+
 import Image from "next/image";
 import React from "react";
 import registerImage from "../../../../public/assets/images/register-img.png";
 import logo from "../../../../public/assets/icons/logo-icon.svg";
 import RegisterForm from "@/components/forms/RegisterForm";
 
-const Register = () => {
+const Register = ({ params }) => {
+  const { userId } = params;
+
   return (
     <div className="flex h-screen max-h-screen  ">
       <section className="remove-scrollbar container">
@@ -22,7 +26,7 @@ const Register = () => {
             </h1>
           </div>
 
-          <RegisterForm />
+          <RegisterForm userId={userId} />
         </div>
       </section>
       <Image

@@ -19,6 +19,19 @@ import CustomFormField from "../CustomFormField";
 import SubmitButton from "../SubmitButton";
 import { Form } from "../ui/form";
 import { FormFieldType } from "./PatientForm";
+import { useAppDispatch } from "@/lib/redux/hooks";
+import { createAppointment } from "@/features/appointment/appointmentSlice";
+
+export interface Appointment {
+  patient: string;
+  schedule: Date;
+  status: string;
+  primaryPhysician: string;
+  reason: string;
+  note: string;
+  userId: string;
+  cancellationReason?: string | null;
+}
 
 export const AppointmentForm = ({
   userId,
@@ -30,10 +43,11 @@ export const AppointmentForm = ({
   userId: string;
   patientId: string;
   type: "create" | "schedule" | "cancel";
-  appointment;
+  appointment: Appointment;
   setOpen?: Dispatch<SetStateAction<boolean>>;
 }) => {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState(false);
 
   const AppointmentFormValidation = getAppointmentSchema(type);
@@ -54,58 +68,60 @@ export const AppointmentForm = ({
   const onSubmit = async (
     values: z.infer<typeof AppointmentFormValidation>
   ) => {
-    //   setIsLoading(true);
-    //   let status;
-    //   switch (type) {
-    //     case "schedule":
-    //       status = "scheduled";
-    //       break;
-    //     case "cancel":
-    //       status = "cancelled";
-    //       break;
-    //     default:
-    //       status = "pending";
-    //   }
-    //   try {
-    //     if (type === "create" && patientId) {
-    //       const appointment = {
-    //         userId,
-    //         patient: patientId,
-    //         primaryPhysician: values.primaryPhysician,
-    //         schedule: new Date(values.schedule),
-    //         reason: values.reason!,
-    //         status: status as Status,
-    //         note: values.note,
-    //       };
-    //       const newAppointment = await createAppointment(appointment);
-    //       if (newAppointment) {
-    //         form.reset();
-    //         router.push(
-    //           `/patients/${userId}/new-appointment/success?appointmentId=${newAppointment.$id}`
-    //         );
-    //       }
-    //     } else {
-    //       const appointmentToUpdate = {
-    //         userId,
-    //         appointmentId: appointment?.$id!,
-    //         appointment: {
-    //           primaryPhysician: values.primaryPhysician,
-    //           schedule: new Date(values.schedule),
-    //           status: status as Status,
-    //           cancellationReason: values.cancellationReason,
-    //         },
-    //         type,
-    //       };
-    //       const updatedAppointment = await updateAppointment(appointmentToUpdate);
-    //       if (updatedAppointment) {
-    //         setOpen && setOpen(false);
-    //         form.reset();
-    //       }
-    //     }
-    //   } catch (error) {
-    //     console.log(error);
-    //   }
-    //   setIsLoading(false);
+    setIsLoading(true);
+    let status;
+    switch (type) {
+      case "schedule":
+        status = "scheduled";
+        break;
+      case "cancel":
+        status = "cancelled";
+        break;
+      default:
+        status = "pending";
+    }
+    try {
+      if (type === "create" && patientId) {
+        const appointment = {
+          userId,
+          patient: patientId,
+          primaryPhysician: values.primaryPhysician,
+          schedule: new Date(values.schedule),
+          reason: values.reason!,
+          status: status!,
+          note: values.note!,
+        };
+
+        dispatch(createAppointment(appointment)).then((result) => {
+          const { id } = result.payload;
+          console.log(id);
+          router.push(
+            `/patients/${userId}/new-appointment/success?appointmentId=${id}`
+          );
+        });
+      }
+      //else {
+      //   const appointmentToUpdate = {
+      //     userId,
+      //     appointmentId: appointment?.$id!,
+      //     appointment: {
+      //       primaryPhysician: values.primaryPhysician,
+      //       schedule: new Date(values.schedule),
+      //       status: status as Status,
+      //       cancellationReason: values.cancellationReason,
+      //     },
+      //     type,
+      //   };
+      //   const updatedAppointment = await updateAppointment(appointmentToUpdate);
+      //   if (updatedAppointment) {
+      //     setOpen && setOpen(false);
+      //     form.reset();
+      //   }
+      // }
+    } catch (error) {
+      console.log(error);
+    }
+    setIsLoading(false);
   };
 
   let buttonLabel;
