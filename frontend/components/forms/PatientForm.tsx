@@ -12,6 +12,7 @@ import { UserFormValidation } from "@/lib/validation";
 import { useAppDispatch } from "@/lib/redux/hooks";
 import { createUser } from "@/features/user/userSlice";
 import { useRouter } from "next/navigation";
+import { createUserAppWrite } from "@/lib/actions/user.actions";
 
 export enum FormFieldType {
   INPUT = "input",
@@ -36,21 +37,26 @@ const PatientForm = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof UserFormValidation>) => {
+  const onSubmit = async (values: z.infer<typeof UserFormValidation>) => {
     setIsLoading(true);
-    dispatch(createUser(values))
-      .unwrap() // Allows catching errors if needed
-      .then((result) => {
-        router.push(`/patients/${result.id}/register`);
-        console.log("User created successfully:", result);
-        form.reset();
-      })
-      .catch((error) => {
-        console.error("Failed to create user:", error);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+
+    const user = await createUserAppWrite(values);
+    if (user) {
+      const userId = user.$id;
+      dispatch(createUser({ ...values, appWriteUserId: userId }))
+        .unwrap() // Allows catching errors if needed
+        .then((result) => {
+          router.push(`/patients/${result.id}/register`);
+          console.log("User created successfully:", result);
+          form.reset();
+        })
+        .catch((error) => {
+          console.error("Failed to create user:", error);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
   };
 
   return (
