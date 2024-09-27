@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,12 +8,11 @@ import { Form } from "@/components/ui/form";
 import CustomFormField from "../CustomFormField";
 import SubmitButton from "../SubmitButton";
 import { useState } from "react";
-
-const formSchema = z.object({
-  username: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
-  }),
-});
+import { UserFormValidation } from "@/lib/validation";
+import { useAppDispatch } from "@/lib/redux/hooks";
+import { createUser } from "@/features/user/userSlice";
+import { useRouter } from "next/navigation";
+import { createUserAppWrite } from "@/lib/actions/user.actions";
 
 export enum FormFieldType {
   INPUT = "input",
@@ -25,20 +25,39 @@ export enum FormFieldType {
 }
 const PatientForm = () => {
   const [isLoading, setIsLoading] = useState(false);
-  // 1. Define your form.
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+
+  const form = useForm<z.infer<typeof UserFormValidation>>({
+    resolver: zodResolver(UserFormValidation),
     defaultValues: {
-      username: "",
+      name: "",
+      email: "",
+      phone: "",
     },
   });
 
-  // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
-  }
+  const onSubmit = async (values: z.infer<typeof UserFormValidation>) => {
+    setIsLoading(true);
+
+    const user = await createUserAppWrite(values);
+    if (user) {
+      const userId = user.$id;
+      dispatch(createUser({ ...values, appWriteUserId: userId }))
+        .unwrap() // Allows catching errors if needed
+        .then((result) => {
+          router.push(`/patients/${result.id}/register`);
+          console.log("User created successfully:", result);
+          form.reset();
+        })
+        .catch((error) => {
+          console.error("Failed to create user:", error);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  };
 
   return (
     <Form {...form}>
