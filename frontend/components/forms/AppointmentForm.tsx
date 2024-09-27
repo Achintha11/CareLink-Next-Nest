@@ -19,10 +19,17 @@ import CustomFormField from "../CustomFormField";
 import SubmitButton from "../SubmitButton";
 import { Form } from "../ui/form";
 import { FormFieldType } from "./PatientForm";
-import { useAppDispatch } from "@/lib/redux/hooks";
-import { createAppointment } from "@/features/appointment/appointmentSlice";
+import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
+import {
+  createAppointment,
+  updateAppointment,
+} from "@/features/appointment/appointmentSlice";
+import { formatDateTime } from "@/lib/utils";
+import { sendSMSNotification } from "@/lib/actions/appointment.actions";
+import { getSingleUser } from "@/features/user/userSlice";
 
 export interface Appointment {
+  id?: string;
   patient: string;
   schedule: Date;
   status: string;
@@ -46,9 +53,16 @@ export const AppointmentForm = ({
   appointment: Appointment;
   setOpen?: Dispatch<SetStateAction<boolean>>;
 }) => {
-  const router = useRouter();
   const dispatch = useAppDispatch();
+
+  dispatch(getSingleUser({ userId }));
+
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+
+  const { user } = useAppSelector((store) => store.user);
+
+  const appWriteUserId = user?.appWriteUserId;
 
   const AppointmentFormValidation = getAppointmentSchema(type);
 
@@ -99,25 +113,36 @@ export const AppointmentForm = ({
             `/patients/${userId}/new-appointment/success?appointmentId=${id}`
           );
         });
+      } else {
+        const updatedAppointment = {
+          primaryPhysician: values.primaryPhysician,
+          schedule: new Date(values.schedule),
+          status: status,
+          cancellationReason: values.cancellationReason,
+        };
+
+        dispatch(
+          updateAppointment({
+            appointmentId: appointment.id!,
+            appointmentData: updatedAppointment,
+          })
+        ).then(() => {
+          if (setOpen) {
+            setOpen(false);
+          }
+          const smsMessage = `Greetings from CarePulse. ${
+            type === "schedule"
+              ? `Your appointment is confirmed for ${
+                  formatDateTime(appointment.schedule!).dateTime
+                } with Dr. ${appointment.primaryPhysician}`
+              : `We regret to inform that your appointment for ${
+                  formatDateTime(appointment.schedule!).dateTime
+                } is cancelled. Reason:  ${appointment.cancellationReason}`
+          }.`;
+
+          sendSMSNotification(smsMessage, appWriteUserId);
+        });
       }
-      //else {
-      //   const appointmentToUpdate = {
-      //     userId,
-      //     appointmentId: appointment?.$id!,
-      //     appointment: {
-      //       primaryPhysician: values.primaryPhysician,
-      //       schedule: new Date(values.schedule),
-      //       status: status as Status,
-      //       cancellationReason: values.cancellationReason,
-      //     },
-      //     type,
-      //   };
-      //   const updatedAppointment = await updateAppointment(appointmentToUpdate);
-      //   if (updatedAppointment) {
-      //     setOpen && setOpen(false);
-      //     form.reset();
-      //   }
-      // }
     } catch (error) {
       console.log(error);
     }
@@ -133,7 +158,7 @@ export const AppointmentForm = ({
       buttonLabel = "Schedule Appointment";
       break;
     default:
-      buttonLabel = "Submit Apppointment";
+      buttonLabel = "Submit Appointment";
   }
 
   return (

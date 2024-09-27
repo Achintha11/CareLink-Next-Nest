@@ -1,15 +1,19 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import * as sdk from "node-appwrite";
 
-const PROJECT_ID = "66f511f000150a99a1bd";
-const API_KEY =
-  "standard_5a4df484982cebb2b43b02f1a1f2a69d9b3a07c6acfa3480f146063689a53ee883096ba71fc1fbb0e1ea03e14bd09059c7cd89b3ccd1b3119f217d19cc260ac88c44902dfe2cdc5a88433bba0c7c8a62c2dcc1e0e24fb7a0eb5d3974fc47cb3a13f61368114f30a91753d548383dd292185afc7614a2ff68d151ba77d6f1da2a";
+const PROJECT_ID = process.env.NEXT_PUBLIC_PROJECT_ID;
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
 
-const BUCKET_ID = "66f5174e00274aa87680";
-const ENDPOINT = "https://cloud.appwrite.io/v1";
-
+const BUCKET_ID = process.env.NEXT_PUBLIC_BUCKET_ID;
+const ENDPOINT = process.env.NEXT_PUBLIC_ENDPOINT;
 const client = new sdk.Client();
+
+const ENV = process.env.PROJECT_ID;
+
+console.log("PROJECT_ID:", process.env.API_KEY);
 
 client.setEndpoint(ENDPOINT!).setProject(PROJECT_ID!).setKey(API_KEY!);
 
 export const storage = new sdk.Storage(client);
+export const messaging = new sdk.Messaging(client);
+export const users = new sdk.Users(client);
